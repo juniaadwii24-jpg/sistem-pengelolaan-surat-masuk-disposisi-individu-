@@ -1,33 +1,6 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-/**
- * Model untuk tabel "recipients" (lihat pengelolaan.sql).
- *
- * Kolom tabel: id, name, position, department, email, created_at.
- *
- * PENYESUAIAN dari referensi DataPelanggan_model:
- * - DataPelanggan_model membangun query dengan CONCAT STRING manual, contoh:
- *     "WHERE " . $data['filtervalue'] . " LIKE '%" . $data['filtertext'] . "%'"
- *     "SELECT * FROM mst_pelanggan WHERE id_pelanggan='$id'"
- *   Ini rentan SQL Injection karena $data['filtervalue']/$data['filtertext']/$id
- *   langsung disisipkan ke query string tanpa escape maupun whitelist kolom.
- *   Di model ini SEMUA query pakai Query Builder CodeIgniter ($this->db->...),
- *   dan filter kolom pencarian di-WHITELIST lewat $allowedFilterColumns,
- *   konsisten dengan pola yang sudah dipakai di Disposition_model.
- * - Kolom PK memakai "id" (bukan "id_recipients"/"id_pelanggan"), konsisten
- *   dengan skema pengelolaan.sql dan dengan Incoming_letter_model /
- *   Disposition_model yang sudah lebih dulu dibuat untuk modul ini.
- * - recipients TIDAK punya kolom FK ke tabel lain (lihat pengelolaan.sql),
- *   jadi getDataAll() di sini TIDAK perlu JOIN sama sekali — berbeda dengan
- *   DataPelanggan_model::getDataAll() yang JOIN ke mst_grup_pelanggan, sales,
- *   mst_wilayah, dst. Justru tabel "dispositions"-lah yang JOIN ke recipients
- *   (lihat Disposition_model::_baseQuery()), bukan sebaliknya.
- * - Ditambahkan isUsedInDisposition() untuk mengecek constraint
- *   fk_disposition_recipient ... ON DELETE RESTRICT sebelum delete(),
- *   supaya user dapat pesan error yang jelas, bukan error SQL mentah dari
- *   database saat masih ada disposisi yang mereferensikan recipient ini.
- */
 class Recipient_model extends CI_Model
 {
     private $table = 'recipients';
@@ -121,7 +94,8 @@ class Recipient_model extends CI_Model
           'created_at' => date('Y-m-d H:i:s'), // jaga-jaga kalau kolom ini NOT NULL tanpa default
           
         ];
-                    return $this->db->insert_id(); // return ID baru (0/false kalau gagal)
+            $this->db->insert($this->table, $insert);   // <-- baris yang hilang, WAJIB ADA
+            return $this->db->insert_id(); // return ID baru (0/false kalau gagal)
 
     }
 
